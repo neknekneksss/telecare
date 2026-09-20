@@ -48,6 +48,17 @@ function mapDatabaseDoctor(row: any): Doctor {
   };
 }
 
+function mapDatabasePatient(row: any): Patient {
+  return {
+    id: row.id,
+    avatarColor: row.avatar_color ?? randomAvatarColor(),
+    name: row.name,
+    email: row.email ?? undefined,
+    password: row.password ?? undefined,
+    dateOfBirth: row.date_of_birth ?? undefined,
+  };
+}
+
 interface UsersState {
   patients: Patient[];
   doctors: Doctor[];
@@ -59,7 +70,7 @@ interface UsersState {
     email?: string;
     dateOfBirth?: string;
     password?: string;
-  }) => Patient;
+  }) => Promise<Patient>;
 
   addDoctor: (input: {
     name: string;
@@ -69,8 +80,8 @@ interface UsersState {
     password?: string;
   }) => Promise<Doctor>;
 
-  findPatientByEmail: (email: string) => Patient | undefined;
-  findDoctorByEmail: (email: string) => Doctor | undefined;
+  findPatientByEmail: (email: string) => Promise<Patient | undefined>;
+  findDoctorByEmail: (email: string) => Promise<Doctor | undefined>;
 }
 
 export const useUsers = create<UsersState>()(
@@ -105,15 +116,29 @@ export const useUsers = create<UsersState>()(
         });
       },
 
-      addPatient: (input) => {
+      addPatient: async (input) => {
         const newPatient: Patient = {
-          id: `pat-${Date.now()}`,
+          id: `pat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           avatarColor: randomAvatarColor(),
           name: input.name,
           email: input.email,
           dateOfBirth: input.dateOfBirth,
           password: input.password,
         };
+
+        const { error } = await supabase.from("patients").insert({
+          id: newPatient.id,
+          name: newPatient.name,
+          email: newPatient.email ?? null,
+          password: newPatient.password ?? null,
+          date_of_birth: newPatient.dateOfBirth ?? null,
+          avatar_color: newPatient.avatarColor,
+        });
+
+        if (error) {
+          console.error("Failed to create patient:", error);
+          throw new Error(`Failed to create patient: ${error.message}`);
+        }
 
         set((state) => ({
           patients: [...state.patients, newPatient],
@@ -157,15 +182,84 @@ export const useUsers = create<UsersState>()(
         return newDoctor;
       },
 
-      findPatientByEmail: (email) =>
-        get().patients.find(
+      findPatientByEmail: async (email) => {
+        // Keep seeded/demo patients local.
+        const localPatient = get().patients.find(
           (patient) => patient.email?.toLowerCase() === email.toLowerCase(),
-        ),
+        );
 
-      findDoctorByEmail: (email) =>
-        get().doctors.find(
+        if (localPatient) {
+          return localPatient;
+        }
+
+        // Fall back to Supabase for newly created accounts.
+        const { data, error } = await supabase
+          .from("patients")
+          .select("*")
+          .eq("email", email.toLowerCase())
+          .maybeSingle();
+
+        if (error) {
+          console.error("Failed to find patient:", error);
+          return undefined;
+        }
+
+        if (!data) {
+          return undefined;
+        }
+
+        const patient = mapDatabasePatient(data);
+
+        // Cache the account locally after finding it.
+        set((state) => {
+          const exists = state.patients.some(
+            (existing) => existing.id === patient.id,
+          );
+
+          return exists ? state : { patients: [...state.patients, patient] };
+        });
+
+        return patient;
+      },
+
+      findDoctorByEmail: async (email) => {
+        // Keep seeded/demo doctors local.
+        const localDoctor = get().doctors.find(
           (doctor) => doctor.email?.toLowerCase() === email.toLowerCase(),
-        ),
+        );
+
+        if (localDoctor) {
+          return localDoctor;
+        }
+
+        // Fall back to Supabase for newly created accounts.
+        const { data, error } = await supabase
+          .from("doctors")
+          .select("*")
+          .eq("email", email.toLowerCase())
+          .maybeSingle();
+
+        if (error) {
+          console.error("Failed to find doctor:", error);
+          return undefined;
+        }
+
+        if (!data) {
+          return undefined;
+        }
+
+        const doctor = mapDatabaseDoctor(data);
+
+        set((state) => {
+          const exists = state.doctors.some(
+            (existing) => existing.id === doctor.id,
+          );
+
+          return exists ? state : { doctors: [...state.doctors, doctor] };
+        });
+
+        return doctor;
+      },
     }),
     {
       name: "telecare-users",
