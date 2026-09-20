@@ -1,0 +1,56 @@
+import { Doctor } from "@/lib/types";
+
+export const doctors: Doctor[] = [
+  {
+    id: "doc-1",
+    name: "Joannah Elise A. Ucat",
+    specialty: "Pediatrician",
+    location: "Malaybalay Medical Hospital, Malaybalay City",
+    avatarColor: "#3566AB",
+    availableSlots: [
+      "2026-09-22T09:00:00+08:00",
+      "2026-09-22T10:00:00+08:00",
+      "2026-09-23T14:00:00+08:00",
+    ],
+    phone: "09560067870",
+    consultationFee: 800,
+  },
+  {
+    id: "doc-2",
+    name: "Maica Uyan",
+    specialty: "Cardiologist",
+    location: "Adventist Medical Center - Valencia City, Valencia City",
+    avatarColor: "#83B7DE",
+    availableSlots: ["2026-09-22T11:00:00+08:00", "2026-09-24T09:30:00+08:00"],
+    consultationFee: 800,
+  },
+  {
+    id: "doc-3",
+    name: "Geeann Tumampo",
+    specialty: "Nephrologist",
+    location: "Bukidnon Provincial Medical Center, Malaybalay City",
+    avatarColor: "#114084",
+    availableSlots: ["2026-09-23T13:00:00+08:00", "2026-09-24T10:00:00+08:00"],
+    phone: "09455703805",
+    consultationFee: 800,
+  },
+  {
+    id: "doc-4",
+    name: "Grizel Rae Rebleza",
+    specialty: "OBGyne",
+    location: "St. Joseph Southern Bukidnon Hospital, Maramag",
+    avatarColor: "#7C5AA6",
+    availableSlots: ["2026-09-23T09:00:00+08:00", "2026-09-25T14:00:00+08:00"],
+    phone: "09662135262",
+    consultationFee: 800,
+  },
+  {
+    id: "doc-5",
+    name: "Kaye Solatori",
+    specialty: "Internal Medicine",
+    location: "Phillips Memorial Hospital, Manolo Fortich",
+    avatarColor: "#4D8B74",
+    availableSlots: ["2026-09-24T09:00:00+08:00", "2026-09-25T11:00:00+08:00"],
+    consultationFee: 800,
+  },
+];
